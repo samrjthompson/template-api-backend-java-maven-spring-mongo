@@ -25,6 +25,9 @@
         <junit-platform-suite-api.version>1.8.2</junit-platform-suite-api.version>
         <spring-boot-dependencies.version>3.2.4</spring-boot-dependencies.version>
         <wiremock-version>3.5.4</wiremock-version>
+
+        <skip.unit.tests>false</skip.unit.tests>
+        <skip.integration.tests>false</skip.integration.tests>
     </properties>
 
     <dependencyManagement>
@@ -111,6 +114,7 @@
                     <excludes>
                         <exclude>*ITest.java</exclude>
                     </excludes>
+                    <skipTests>${skip.unit.tests}</skipTests>
                 </configuration>
             </plugin>
 
@@ -129,6 +133,7 @@
                 </executions>
                 <configuration>
                     <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                    <skipITs>${skip.integration.tests}</skipITs>
                 </configuration>
             </plugin>
 
