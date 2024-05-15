@@ -111,6 +111,12 @@ git branch -m main
 git push -f origin main
 ```
 
+### DOCKER
+Build image:
+```bash
+docker build -t <name_of_image>:latest -f ./ecs-image-build/Dockerfile .
+```
+
 # Default settings
 You will need to change a few defaults for the project to work correctly.
 1. The _**group id**_ for Maven needs to change to something appropriate. This needs changing in both the pom and packages (main and test).
