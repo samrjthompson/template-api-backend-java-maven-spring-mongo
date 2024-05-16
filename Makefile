@@ -9,7 +9,7 @@ test:
 .PHONY: unit-test
 unit-test:
 	mvn clean
-	mvn verify -Dskip.unit.tests=false -Dskip.integration.tests=true
+	mvn test -Dskip.unit.tests=false -Dskip.integration.tests=true
 
 .PHONY: i-test
 i-test:
