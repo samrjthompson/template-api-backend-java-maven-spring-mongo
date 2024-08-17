@@ -28,7 +28,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class ControllerIT {
 
     @Value("${spring.data.mongodb.database}")
-    private String COLLECTION_NAME;
+    private String collectionName;
     private static final String HEALTHCHECK_ENDPOINT = "/healthcheck";
 
     @Container
@@ -48,8 +48,8 @@ class ControllerIT {
 
     @BeforeEach
     void setUp() {
-        mongoTemplate.dropCollection(COLLECTION_NAME);
-        mongoTemplate.createCollection(COLLECTION_NAME);
+        mongoTemplate.dropCollection(collectionName);
+        mongoTemplate.createCollection(collectionName);
     }
 
     @Test
