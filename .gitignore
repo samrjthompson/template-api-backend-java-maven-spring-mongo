@@ -3,6 +3,13 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Package Files #
+*.jar
+*.war
+*.zip
+*.rar
+*.tar.gz
+
 ### IntelliJ IDEA ###
 .idea/*
 *.iws
