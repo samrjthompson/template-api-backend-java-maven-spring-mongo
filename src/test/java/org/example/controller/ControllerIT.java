@@ -32,7 +32,7 @@ class ControllerIT {
     private static final String HEALTHCHECK_ENDPOINT = "/healthcheck";
 
     @Container
-    private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:5.0.12");
+    private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:8.0.3");
 
     @Autowired
     private MongoTemplate mongoTemplate;
