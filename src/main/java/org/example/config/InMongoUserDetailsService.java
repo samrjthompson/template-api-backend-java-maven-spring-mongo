@@ -5,11 +5,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-public class InMemoryUserDetailsService implements UserDetailsService {
+public class InMongoUserDetailsService implements UserDetailsService {
 
     private final List<UserDetails> users;
 
-    public InMemoryUserDetailsService(List<UserDetails> users) {
+    public InMongoUserDetailsService(List<UserDetails> users) {
         this.users = users;
     }
 
