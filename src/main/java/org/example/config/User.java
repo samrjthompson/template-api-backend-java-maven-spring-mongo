@@ -18,17 +18,10 @@ public class User implements UserDetails {
     private String password;
     private String authority;
     private boolean isEnabled;
+    private String salt;
 
-    public User(String id, String username, String password, String authority, boolean isEnabled) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.authority = authority;
-        this.isEnabled = isEnabled;
-    }
-
-    public User() {
-
+    public String getId() {
+        return id;
     }
 
     public User id(String id) {
@@ -46,6 +39,10 @@ public class User implements UserDetails {
         return this;
     }
 
+    public String getAuthority() {
+        return authority;
+    }
+
     public User authority(String authority) {
         this.authority = authority;
         return this;
@@ -56,12 +53,13 @@ public class User implements UserDetails {
         return this;
     }
 
-    public String getId() {
-        return id;
+    public String getSalt() {
+        return salt;
     }
 
-    public String getAuthority() {
-        return authority;
+    public User salt(String salt) {
+        this.salt = salt;
+        return this;
     }
 
     @Override
