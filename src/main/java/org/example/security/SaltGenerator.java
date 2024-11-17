@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.security;
 
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;

@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.security;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collection;

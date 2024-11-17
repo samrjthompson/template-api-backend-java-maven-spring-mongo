@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.security;
 
 import java.util.List;
 import org.springframework.security.core.userdetails.UserDetails;
