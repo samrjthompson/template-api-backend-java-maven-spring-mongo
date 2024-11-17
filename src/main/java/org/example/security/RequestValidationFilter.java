@@ -1,25 +1,21 @@
 package org.example.security;
 
-import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.slf4j.MDC;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Custom filter that validates the incoming request has a request id.
  * If no request id, return 400 Bad Request.
  */
-public class RequestValidationFilter implements Filter {
+public class RequestValidationFilter extends OncePerRequestFilter {
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest) servletRequest;
-        HttpServletResponse response = (HttpServletResponse) servletResponse;
-
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         final String requestId = request.getHeader("x-request-id");
 
         if (requestId == null || requestId.isBlank()) {
@@ -27,6 +23,7 @@ public class RequestValidationFilter implements Filter {
             return;
         }
 
+        MDC.put("request_id", requestId);
         filterChain.doFilter(request, response);
     }
 }

@@ -1,7 +1,5 @@
 package org.example.config;
 
-import static org.example.Main.NAMESPACE;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -12,9 +10,6 @@ import org.example.security.InMongoUserDetailsService;
 import org.example.security.RequestValidationFilter;
 import org.example.security.Sha512PasswordEncoder;
 import org.example.security.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -22,7 +17,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -34,19 +28,6 @@ public class AppConfig {
 
     public AppConfig(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
-    }
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
-
-    private final AppProperties appProperties;
-
-    public AppConfig(AppProperties appProperties) {
-        this.appProperties = appProperties;
-
-        MDC.clear();
-        MDC.put("context_id", appProperties.contextId());
-
-        LOGGER.info("Context ID: {}", appProperties.contextId());
     }
 
     @Bean
