@@ -12,11 +12,14 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 @Configuration
 public class MongoConfig {
 
-    @Value("${spring.data.mongodb.uri}")
-    private String connectionUri;
+    private final String connectionUri;
+    private final String databaseName;
 
-    @Value("${spring.data.mongodb.database}")
-    private String databaseName;
+    public MongoConfig(@Value("${spring.data.mongodb.uri}") String connectionUri,
+                       @Value("${spring.data.mongodb.database}") String databaseName) {
+        this.connectionUri = connectionUri;
+        this.databaseName = databaseName;
+    }
 
     @Bean
     public MongoClient mongo() {

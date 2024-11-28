@@ -1,23 +1,23 @@
 package org.example.security;
 
-import java.util.List;
-import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Optional;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Component;
 
+@Component
 public class InMongoUserDetailsService implements UserDetailsService {
 
-    private final List<UserDetails> users;
+    private final MongoTemplate mongoTemplate;
 
-    public InMongoUserDetailsService(List<UserDetails> users) {
-        this.users = users;
+    public InMongoUserDetailsService(MongoTemplate mongoTemplate) {
+        this.mongoTemplate = mongoTemplate;
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return users.stream()
-                .filter(u -> u.getUsername().equals(username))
-                .findFirst()
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public User loadUserByUsername(final String username) throws UsernameNotFoundException {
+        return Optional.ofNullable(mongoTemplate.findById(username, User.class))
+                .orElseThrow(() -> new UsernameNotFoundException(username));
     }
 }
