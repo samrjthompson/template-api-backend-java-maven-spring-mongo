@@ -32,4 +32,15 @@ public class Controller {
         return ResponseEntity.ok().body(response);
     }
 
+    @GetMapping("/hello/private")
+    public ResponseEntity<String> helloPrivate() {
+        LOGGER.info("Calling hello private endpoint");
+
+        SecurityContext context = SecurityContextHolder.getContext();
+        Authentication authentication = context.getAuthentication();
+        final String response = "Hello %s! %n".formatted(authentication.getName());
+
+        return ResponseEntity.ok().body(response);
+    }
+
 }
