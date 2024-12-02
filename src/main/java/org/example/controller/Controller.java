@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,7 +24,7 @@ public class Controller {
 
     @GetMapping("/hello")
     public ResponseEntity<String> hello() {
-        LOGGER.info("Calling hello endpoint");
+        LOGGER.info("Calling hello GET endpoint");
 
         SecurityContext context = SecurityContextHolder.getContext();
         Authentication authentication = context.getAuthentication();
@@ -41,6 +42,12 @@ public class Controller {
         final String response = "Hello %s! %n".formatted(authentication.getName());
 
         return ResponseEntity.ok().body(response);
+    }
+
+    @PostMapping("/hello")
+    public ResponseEntity<String> helloPost() {
+        LOGGER.info("Calling hello POST endpoint");
+        return ResponseEntity.ok().body("POST Hello!");
     }
 
 }
