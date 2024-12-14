@@ -27,7 +27,6 @@ import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -41,10 +40,17 @@ public class SecurityConfig {
     @Order(0)
     public SecurityFilterChain asFilterChain(HttpSecurity http) throws Exception {
 //        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-        http.with(OAuth2AuthorizationServerConfigurer.authorizationServer(), Customizer.withDefaults());
+        OAuth2AuthorizationServerConfigurer oAuth2AuthorizationServerConfigurer =
+                OAuth2AuthorizationServerConfigurer
+                        .authorizationServer()
+                        .oidc(Customizer.withDefaults());
 
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-                .oidc(Customizer.withDefaults());
+        http.securityMatcher(oAuth2AuthorizationServerConfigurer.getEndpointsMatcher());
+        http.with(oAuth2AuthorizationServerConfigurer, Customizer.withDefaults());
+        http.authorizeHttpRequests(
+                c -> c.anyRequest().authenticated()
+        );
+//        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
 
         http.exceptionHandling(e ->
                 e.authenticationEntryPoint(
@@ -59,10 +65,9 @@ public class SecurityConfig {
     public SecurityFilterChain defaultFilterChain(HttpSecurity http) throws Exception {
         http.formLogin(Customizer.withDefaults());
 
-        http.securityMatcher(http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).getEndpointsMatcher());
-        http.authorizeHttpRequests(
-                c -> c.anyRequest().authenticated()
-        );
+//        http.authorizeHttpRequests(
+//                c -> c.anyRequest().authenticated()
+//        );
 
         return http.build();
     }
@@ -86,11 +91,11 @@ public class SecurityConfig {
     public RegisteredClientRepository registeredClientRepository() {
         RegisteredClient registeredClient =
                 RegisteredClient.withId(UUID.randomUUID().toString())
-                        .clientId("client")
-                        .clientSecret("secret")
+                        .clientId("client") // Client's username
+                        .clientSecret("secret") // Client's password
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                         .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                        .redirectUri("https://www.manning.com/authorized")
+                        .redirectUri("https://www.manning.com/authorized") // This is a redirect back to the client
                         .scope(OidcScopes.OPENID)
                         .build();
 
