@@ -1,126 +1,133 @@
-# template-api-backend-java-maven-spring-mongo
-This is a work in progress and may contain bloat. The project is designed to make starting an API project quicker.
+# Getting the authorisation server started
 
-# Setting up your new repo's main branch (two methods)
-The first (and simplest) method involves deleting the `.git` file in the repo's dir and re-initialising and force pushing a fresh main branch with no commit history.
-
-As for the second method, I'm not sure but I believe this method doesn't technically delete the git history. It may appear to do so, but the refs can still be found somehow. The above method does fully delete (I think).
-
-In both cases, the following is important to understand:
-
-repo-A is the template repo (aka this repo)
-
-repo-B is your new repo (target repo)
-
-I want to clone repo-A's main branch but without the commit history.
-
-_N.B. This will only work if you are allowed to push directly to main. If not, you will need to push to a new branch, raise a PR and then merge into main._
-
-## Method 1 - Deleting `.git` File (Simplest Method)
-
-### Clone the target repo (repo-B)
-```bash
-git clone git@github.com:<username>/repo-B
+## Getting Config Info
+The below request returns some config info about the server, such as endpoints:
+```
+GET http://localhost:8080/.well-known/openid-configuration
 ```
 
-Then cd into that new clone repo dir.
+## Requesting the token
+The below will need to be pasted into the browser once the authorisation server has started:
+```
+http://localhost:8080/oauth2/authorize?response_type=code&client_id=client&scope=openid&redirect_uri=https://www.manning.com/authorized&code_challenge=iMnq5o6zALKXGivsnlom_0F5_WYda32GHkxlV7mq7hQ&code_challenge_method=S256
+```
+Note all the query params. Especially, the `code_challenge` which is the hashed version of the `code_verifier` used in 
+the next step. The hashing algorithm is specified by the `code_challenge_method` param (e.g., SHA-256, in this case).
 
-### Pull the template repo's branch (repo-A)
-While in the target repo's dir, run the following:
-```bash
-git pull git@github.com:<username>/repo-A <branch_name>
+When sending the above request in the browser, you will be prompted to login with the user credentials (not the same as the 
+registered client credentials). These user credentials are an individual user's details. The registered client credentials
+are the client server's credentials. 
+
+Once logged in, you should be redirected to the `redirect_url` with a query param called `code`.
+This code refers to the code you will send to the authorisation server to get the JWT Token. 
+
+E.g., `https://www.manning.com/authorized?code=ZFCnie_bmWBa9txy_ML0isLWOqsVr-5M5AaYj4ce4dje1PgemF-OdnnV2kCQQQI4xB3f2IIBs-CeYg2PzaXkCh7GgJi1E4tBJnlzbEfl6YDzr2GzX_7gBF9BG2eDmJ54`
+
+You must copy and paste this code into the `code` field in the next section.
+
+## Next
+You will then need to send another HTTP request to the server using the basic auth credentials set in the registered client.
+
+### URL
+```
+POST http://localhost:8080/oauth2/token
+```
+### Full cURL request
+x-www-form-urlencoded (not JSON)
+```
+curl --location 'http://localhost:8080/oauth2/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--header 'Authorization: Basic Y2xpZW50OnNlY3JldA==' \
+--data-urlencode 'client_id=client' \
+--data-urlencode 'redirect_uri=https://www.manning.com/authorized' \
+--data-urlencode 'grant_type=authorization_code' \
+--data-urlencode 'code=ZFCnie_bmWBa9txy_ML0isLWOqsVr-5M5AaYj4ce4dje1PgemF-OdnnV2kCQQQI4xB3f2IIBs-CeYg2PzaXkCh7GgJi1E4tBJnlzbEfl6YDzr2GzX_7gBF9BG2eDmJ54' \
+--data-urlencode 'code_verifier=verifier'
 ```
 
-This will pull in repo-A's branch into repo-B along with repo-A's commit history.
+Alternatively, in Postman:
 
-### Delete Git and Initialise Repo
-Run the following command to delete the `.git` file:
-```bash
-rm -rf .git
-```
-Once that is deleted, run:
-```bash
-git init;
-git remote add origin git@github.com:<username>/<repo-name>
-```
+![token request example](docs/token_request.png)
 
-### Commit your code
-You will need to re-commit your code to your current branch:
-```bash
-git add -A;
-git commit -am "Initial commit"
-```
+This method uses basic auth with a username `client` and password `password`. These are the same credentials used to 
+set up the registration client in the config (or, in the future, the registration client stored in the db).
 
-### Push new branch to repo
-You may notice your new branch name is `master`. If you wish to change this to something like `main`, then first you will need to run: 
-```bash
-git branch -m main
-```
-After that, you can now force push this branch to the remote repo:
-```bash
-git push -f origin main
+Note, if you used a SHA-256 hashing algorithm on the `code_verifier` value, the result would be the `code_challenge` value
+passed in to the earlier GET request.
+
+The response from the above POST request gives you the access token needed for authorisation.
+
+## Decoding the JWT
+
+If you use a JWT decoder like [jwt.io](jwt.io), you can look at what's inside the token. You will be able to see 
+the header, payload, and signature used to sign the token. For example:
+
+### Header
+```json
+{
+  "kid": "9e204893-8664-4ede-9aed-142448654d21",
+  "alg": "RS256"
+}
 ```
 
-## Method 2 - Using Orphan Branch
-
-### Clone the target repo (repo-B)
-```bash
-git clone git@github.com:<username>/repo-B
+### Payload
+```json
+{
+  "sub": "bill",
+  "aud": "client",
+  "nbf": 1734197141,
+  "scope": [
+    "openid"
+  ],
+  "iss": "http://localhost:8080",
+  "exp": 1734197441,
+  "iat": 1734197141,
+  "jti": "870a2111-3bf6-490d-b36c-b8643578f24c"
+}
 ```
 
-Then cd into that new clone repo dir.
+### Verify Signature
+```
+RSASHA256(
+base64UrlEncode(header) + "." +
+base64UrlEncode(payload),
 
-### Pull the template repo's branch
-While in the target repo's dir, run the following:
-```bash
-git pull git@github.com:<username>/repo-A <branch_name>
+Public Key in SPKI, PKCS #1, X.509 Certificate, or JWK string format.
+,
+
+Private Key in PKCS #8, PKCS #1, or JWK string format. The key never leaves your browser.
+
+)
 ```
 
-This will pull in repo-A's branch into repo-B along with repo-A's commit history.
+Note that, because this project uses a RSA public/private key, the token gets signed with this.
 
-### Remove commit history
-While still in repo-B's dir, you need to checkout a new orphan branch (no commit history).
-```bash
-git checkout --orphan <temporary_orphan_branch_name>
-```
-This will give you a new branch with no history.
+No passwords are sent in this request, you can just see the usernames `sub` (bill) and the `aud` (client) which relates to the
+user's credentials and the registered client's credentials respectively.
 
-### Commit to orphan branch
-While on the orphan branch, commit all files.
-```bash
-git add -A
-```
-```bash
-git commit -am "Initial commit"
-```
-If you run ```git log``` you should see one commit in the history titled `Initial commit`.
+## Understanding RSA
 
-### Delete main branch
-Delete the main branch on your target repo (you will rename your second branch main after this).
-```bash
-git branch -D main
-```
+With RSA, tokens are signed with the private key, and verified with the public key. Only the authorisation server knows
+the private key. Whereas, other apps can use the public key to validate the token.
 
-### Rename your second branch to main
-```bash
-git branch -m main
-```
+### Validation
+Validation is a way of checking that the JWT was sent from the source you expect. The private/public key relationship
+is how this works. The public key validates that the JWT was sent from somewhere that signed the token using the private key.
 
-### Push your new main branch
-```bash
-git push -f origin main
-```
+If the validation fails, the JWT may have been sent from an unknown source and so is rejected.
 
-### DOCKER
-Build image:
-```bash
-docker build -t <name_of_image>:latest -f ./ecs-image-build/Dockerfile .
+RSA Keys in JSON form look like this:
+```json
+{
+    "p": "23mpJcBVZTvjdv66D1lNY36oMAYKnyrR3N3YzznlWQLKD_BbSmmFkpR1T4wCy5qcmbxeUXpG5XRdwkF-DQ0emY3tBwmeGz9Pf3N-QiVMIabT5y-Fvwy_3iqa1PID4DS96Aegt6tbJbRKpBCyBRmxwt5zMj2zIgwMFwWK0WBvgv0",
+    "kty": "RSA",
+    "q": "-oSDDZRfw-wLcjdIAOBSJapWwMcx_qYJgGJ1b1klF-ECGJeTnVoeVr_AvE1xKZGtbWEWLVXjbGBe4bNzIx1AesegYOdArQkbtKL2zeBTLSP2ypqVfZwHyW2SYlxWBXI4q3OCihvZvTPgn747h5V3_kE6CPg2tCCYjoOKMzFr5G8",
+    "d": "CiwbnGjJwYEEOgNwb-3FWe8qdx--dUi7pdUbyFzH-ZUq6sC0NhLouiIGNwUBZ7Z5_mw0ujCOp8riaJwTastDyDZJq34eBMYVP08EjfiAStafxoXQlGmHEgOt5vVVfdfjZPNMlPVlM61g5e9I_5xNm2O5GMZTyt2fT6y4xrgO5jern6oHfsH4xkkLalyrh2WH2fy5SCc98QevUOueiP_fiXr5wEDHViojHIk9ug9ngTsNzC30n8QfN4W_c3QGsCKCtONOklZc3kjZ8LkKRxMK8XrSp3C8f47kj3No4VMuM_s-WpWF9vtS28YAyN0BIqxWybQaBbD3O5g5Gsvs5HlpAQ",
+    "e": "AQAB",
+    "kid": "1698b303-8646-48e6-84c0-62fee48687cf",
+    "qi": "ZXa0Wl5bmg6vAWtQrqnxRx7BVS1AxLGe9DklGA-Fm0GHhnm6l129IhqTIOsOwh1ohDVzWqY8NqafSOu0i98XcZ5kc3pzU7KzyirF7dzEKWPJXxicopPs-CUX0RK4qR0uOjI6MadIvJhQFleSRuG-0lhsUnG21NSMnEXGVD6ftxQ",
+    "dp": "ibBisJ9gM5mF05Js8dIpneDI7Q_tO_vmGzVGnoMI4nXAhI1bCGz48oOWsSf6XPeLhVtKpL0cmzkM1SC3TsLLTrReXornGNr4KdIwBJlXkMkTqbcDpl7-RAfgiPWn_tG3zkhyyKeFEDtylEkxFcgP4FwkUwGoTxTVxN-iPkbMzpU",
+    "dq": "3DdkJKnLTSTQIwTpbKvESovkWu4_yoQWUh868DjC3KzU9N05y9aOWN-TA3RoB4yhkUcJAa1Aj-JfRbRDgBiUt9mH5-cg-XrKOg4POob5VvMIXK1qv9JLHgwN5B0bGQqBOmX92H4G98UErifBmLwRkRWxeHUJUWpd8Nk8wSeumk0",
+    "n": "1sZqRPs66SLIKtvp2EO8BFTRA3sumapNvMNuowP8kOtB-Qp4pDdS49sUiimaHwAkCG3JGtPdD01gnjm78rIG4nrgegtXVMq5L9teww5fSSXS5hG9i2PqhNhnzh9gl4lW1QFyKmPOmprE5E3EhwkB9DvAXvZ60e5dd8FbVdeOX48vApj_RadEOo64qsxyNcB2pWoYyqQMBhq7ptDWtTgC0N7mKHjEtT8Rd4oG1-WSQZ0U6FJAmsiWFyAvRblIQuHz9GYajP0RPlVy5eDbP3aRJP_RpXAD8Pojf8MEO41ScvVy-NF83xC_3QYIVVfw8kD3uaWe_MH-zES0TMvBTcIfsw"
+}
 ```
-
-# Default settings
-You will need to change a few defaults for the project to work correctly.
-1. The _**group id**_ for Maven needs to change to something appropriate. This needs changing in both the pom and packages (main and test).
-2. The _**artifact id**_ will also need to change in the pom.
-3. The _**url for the MongoDB connection**_ needs to change - follow instructions on the [Mongo Atlas website](https://account.mongodb.com/account/login).
-4. Spring security is disabled by default - this will need to be added to the pom.
-5. Dependency versions will not necessarily be up-to-date - ensure this is reviewed when starting a new project by viewing the [Maven Repo](https://mvnrepository.com/).
