@@ -5,12 +5,15 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
+import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.text.ParseException;
+import java.util.Base64;
 import java.util.UUID;
+import org.example.util.RSAKeyUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -35,6 +38,12 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 
 @Configuration
 public class SecurityConfig {
+
+    private final String encodedRsaKey;
+
+    public SecurityConfig(@Value("${rsa.key}") String encodedRsaKey) {
+        this.encodedRsaKey = encodedRsaKey;
+    }
 
     @Bean
     @Order(0)
@@ -103,20 +112,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JWKSource<SecurityContext> jwkSource() throws NoSuchAlgorithmException {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
+    public JWKSource<SecurityContext> jwkSource() throws ParseException {
+        String json = new String(Base64.getDecoder().decode(encodedRsaKey));
+        RSAKey rsaKey = RSAKey.parse(json);
 
-        KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-
-        RSAKey rsaKey = new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
-                .build();
-
+//        JWKSet jwkSet = new JWKSet(RSAKeyUtils.rsaKeyGenerator());
         JWKSet jwkSet = new JWKSet(rsaKey);
 
         return new ImmutableJWKSet<>(jwkSet);
