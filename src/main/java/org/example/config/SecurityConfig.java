@@ -5,14 +5,9 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.UUID;
-import org.example.util.RSAKeyUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,15 +38,16 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 public class SecurityConfig {
 
     private final String encodedRsaKey;
+    private final String loginUrl;
 
-    public SecurityConfig(@Value("${rsa.key}") String encodedRsaKey) {
+    public SecurityConfig(@Value("${rsa.key}") String encodedRsaKey, @Value("${login.url}") String loginUrl) {
         this.encodedRsaKey = encodedRsaKey;
+        this.loginUrl = loginUrl;
     }
 
     @Bean
     @Order(0)
     public SecurityFilterChain asFilterChain(HttpSecurity http) throws Exception {
-//        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         OAuth2AuthorizationServerConfigurer oAuth2AuthorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer
                         .authorizationServer()
@@ -62,11 +58,10 @@ public class SecurityConfig {
         http.authorizeHttpRequests(
                 c -> c.anyRequest().authenticated()
         );
-//        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
 
         http.exceptionHandling(e ->
                 e.authenticationEntryPoint(
-                        new LoginUrlAuthenticationEntryPoint("/login"))
+                        new LoginUrlAuthenticationEntryPoint(loginUrl))
         );
 
         return http.build();
@@ -77,21 +72,22 @@ public class SecurityConfig {
     public SecurityFilterChain defaultFilterChain(HttpSecurity http) throws Exception {
         http.formLogin(Customizer.withDefaults());
 
-//        http.authorizeHttpRequests(
-//                c -> c.anyRequest().authenticated()
-//        );
-
         return http.build();
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
-        UserDetails userDetails = User.withUsername("bill")
+        UserDetails adminUser = User.withUsername("bill")
                 .password("password")
                 .authorities("admin")
                 .build();
 
-        return new InMemoryUserDetailsManager(userDetails);
+        UserDetails readUser = User.withUsername("john")
+                .password("password")
+                .authorities("read")
+                .build();
+
+        return new InMemoryUserDetailsManager(adminUser, readUser);
     }
 
     @Bean
@@ -134,7 +130,8 @@ public class SecurityConfig {
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
         return context -> {
             JwtClaimsSet.Builder claims = context.getClaims();
-            claims.claim("authorities", context.getPrincipal().getAuthorities()); // Gets authorities assigned to the User logged in
+            claims.claim("authorities",
+                    context.getPrincipal().getAuthorities()); // Gets authorities assigned to the User logged in
         };
     }
 }
