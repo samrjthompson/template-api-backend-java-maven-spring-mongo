@@ -21,7 +21,7 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Disabled
+@Disabled // Disabled due to lack of working mongo config
 @Testcontainers
 @AutoConfigureMockMvc
 @SpringBootTest
