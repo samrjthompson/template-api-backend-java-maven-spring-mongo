@@ -7,8 +7,6 @@ public enum CucumberContext {
 
     CONTEXT;
 
-    private static final String RESPONSE = "RESPONSE";
-
     private final ThreadLocal<Map<String, Object>> testContext = ThreadLocal.withInitial(HashMap::new);
 
     @SuppressWarnings(value = {"unchecked"})

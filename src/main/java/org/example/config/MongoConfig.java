@@ -11,25 +11,25 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 //@Configuration
 public class MongoConfig {
-//
-//    @Value("${spring.data.mongodb.uri}")
-//    private String connectionUri;
-//
-//    @Value("${spring.data.mongodb.database}")
-//    private String databaseName;
-//
-//    @Bean
-//    public MongoClient mongo() {
-//        ConnectionString connectionString = new ConnectionString(connectionUri);
-//        MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
-//                .applyConnectionString(connectionString)
-//                .build();
-//
-//        return MongoClients.create(mongoClientSettings);
-//    }
-//
-//    @Bean
-//    public MongoTemplate mongoTemplate() {
-//        return new MongoTemplate(mongo(), databaseName);
-//    }
+
+    @Value("${spring.data.mongodb.uri}")
+    private String connectionUri;
+
+    @Value("${spring.data.mongodb.database}")
+    private String databaseName;
+
+    @Bean
+    public MongoClient mongo() {
+        ConnectionString connectionString = new ConnectionString(connectionUri);
+        MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
+                .applyConnectionString(connectionString)
+                .build();
+
+        return MongoClients.create(mongoClientSettings);
+    }
+
+    @Bean
+    public MongoTemplate mongoTemplate() {
+        return new MongoTemplate(mongo(), databaseName);
+    }
 }

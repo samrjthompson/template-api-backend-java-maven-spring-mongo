@@ -1,7 +1,6 @@
 package org.example.controller;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
+import java.util.function.Supplier;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -9,16 +8,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 @CrossOrigin
 @RestController
 public class Controller {
 
-    private final WebClient webClient;
+    private final Supplier<WebClient> webClientSupplier;
 
-    public Controller(WebClient webClient) {
-        this.webClient = webClient;
+    public Controller(Supplier<WebClient> webClientSupplier) {
+        this.webClientSupplier = webClientSupplier;
     }
 
     @GetMapping("/healthcheck")
@@ -26,16 +24,20 @@ public class Controller {
         return ResponseEntity.ok().build();
     }
 
+    // This is for demo endpoint only to test cucumber tests and wiremock stubbing
     @GetMapping("/fetch/external")
     public ResponseEntity<String> fetchExternal() {
         HttpStatusCode statusCode;
-        ResponseEntity<String> responseEntity = ResponseEntity.ok().build();
+        ResponseEntity<String> responseEntity;
         try {
-            responseEntity = webClient.get()
+            responseEntity = webClientSupplier.get()
+                    .get()
                     .uri("/external-endpoint")
                     .retrieve()
                     .toEntity(String.class)
-                    .block();
+                    .blockOptional()
+                    .orElseThrow(RuntimeException::new);
+
             statusCode = responseEntity.getStatusCode();
         } catch (WebClientResponseException ex) {
             statusCode = ex.getStatusCode();
