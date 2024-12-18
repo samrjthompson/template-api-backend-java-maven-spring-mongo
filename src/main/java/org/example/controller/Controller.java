@@ -19,11 +19,6 @@ public class Controller {
         this.webClientSupplier = webClientSupplier;
     }
 
-    @GetMapping("/healthcheck")
-    public ResponseEntity<Void> healthcheck() {
-        return ResponseEntity.ok().build();
-    }
-
     // This is for demo endpoint only to test cucumber tests and wiremock stubbing
     @GetMapping("/fetch/external")
     public ResponseEntity<String> fetchExternal() {
